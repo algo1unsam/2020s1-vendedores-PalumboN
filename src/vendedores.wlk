@@ -8,7 +8,11 @@ class Vendedor {
 	const certificaciones = []
 	
 	method esVersatil() {
-		return certificaciones.size() > 3 and self.algunaCertificacionDeProductos() and self.algunaCertificacionDeOtras() 
+		return self.masDe3Certificaciones() and self.algunaCertificacionDeProductos() and self.algunaCertificacionDeOtras() 
+	}
+	
+	method masDe3Certificaciones() { 
+		return certificaciones.size() > 3
 	}
 	
 	method algunaCertificacionDeProductos() {
@@ -28,12 +32,23 @@ class Vendedor {
 		return certificaciones.sum({ certificacion => certificacion.puntos() }) 
 	}
 	
+	method esGenerico() { return self.algunaCertificacionDeOtras() }
+	
+	method agregarCertificacion(certificacion) { certificaciones.add(certificacion) }
+	
+	method tieneAfinidad(centroDeDistribucion) { return self.puedeTrabajar(centroDeDistribucion.ciudad()) }
+	
+	method puedeTrabajar(ciudad)
+	
+	method esCandidato(centroDeDistribucion) { return self.esVersatil() and self.tieneAfinidad(centroDeDistribucion) }
+	
+	method esHumano() { return true }
 }
 
 class VendedorFijo inherits Vendedor {
 	const ciudad
 	
-	method puedeTrabajar(_ciudad) {
+	override method puedeTrabajar(_ciudad) {
 		return _ciudad == ciudad
 	}
 	
@@ -43,7 +58,7 @@ class VendedorFijo inherits Vendedor {
 class VendedorViajante inherits Vendedor {
 	const provinciasDondePuedeTrabajar = []
 	
-	method puedeTrabajar(ciudad) {
+	override method puedeTrabajar(ciudad) {
 		return provinciasDondePuedeTrabajar.contains(ciudad.provincia())
 	}
 	
@@ -59,7 +74,7 @@ class VendedorViajante inherits Vendedor {
 class ComercioCorresponsal inherits Vendedor {
 	const ciudadesConSucursales = []
 	
-	method puedeTrabajar(ciudad) {
+	override method puedeTrabajar(ciudad) {
 		return ciudadesConSucursales.contains(ciudad)
 	}
 	
@@ -78,6 +93,14 @@ class ComercioCorresponsal inherits Vendedor {
 	method provinciasConSucursales() {
 		return ciudadesConSucursales.map({ ciudad => ciudad.provincia() }).asSet() 
 	}
+	
+	override method tieneAfinidad(centroDeDistribucion){ 
+		return super(centroDeDistribucion) and 
+		ciudadesConSucursales.any({ ciudad => not centroDeDistribucion.puedeCubrir(ciudad) })
+    }
+    
+    override method esHumano() { return false }
+    
 } 
 
 
